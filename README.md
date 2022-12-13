@@ -1,0 +1,4 @@
+- if you get the error "The chip needs to be in download mode" when uploading, press the right button on the ESP32
+- when uploading go to serial and do 'set' to make sure the settings are correct
+- use the Wifi derbyshire_iot
+- and for mqtt_host use an IP address
