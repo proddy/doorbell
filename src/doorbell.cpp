@@ -4,8 +4,8 @@
 
 #include "my_config.h"
 #include "version.h"
-#include <PButton.h>
 #include <Arduino.h>
+#include <PButton.h>
 
 #include <MyESP.h>
 
@@ -17,7 +17,7 @@ bool SettingsCallback(MYESP_FSACTION action, uint8_t wc, const char * setting, c
 bool FSCallback(MYESP_FSACTION action, JsonObject json);
 
 
-#define WAIT_TIME 50  // wait time in ms (500 is 1/2 a second)
+#define WAIT_TIME 50 // wait time in ms (500 is 1/2 a second)
 
 command_t PROGMEM project_cmds[] = {{"info", "show info"}};
 
@@ -25,12 +25,13 @@ command_t PROGMEM project_cmds[] = {{"info", "show info"}};
 const uint8_t LED_PIN = 27; // GPIO27
 
 // button
-const uint8_t  PButton_PIN             = 25;    // GPIO25
+const uint8_t  PButton_PIN             = 25; // GPIO25
 const uint16_t PButton_Debounce        = 40;
 const uint16_t PButton_DblClickDelay   = 250;
 const uint16_t PButton_LongPressDelay  = 750;
 const uint16_t PButton_VLongPressDelay = 3000; // 3 seconds
-PButton myPButton(PButton_PIN, HIGH, PButton_Debounce, PButton_DblClickDelay, PButton_LongPressDelay, PButton_VLongPressDelay);
+PButton
+    myPButton(PButton_PIN, HIGH, PButton_Debounce, PButton_DblClickDelay, PButton_LongPressDelay, PButton_VLongPressDelay);
 
 // click types
 enum click_t : uint8_t { PRESS_SINGLE_CLICK, PRESS_DOUBLE_CLICK, PRESS_LONG_CLICK, PRESS_VERYLONG_CLICK };
@@ -120,7 +121,7 @@ void MQTTCallback(unsigned int type, const char * topic, const char * message) {
     }
 }
 
-// callback for loading/saving settings to the file system (SPIFFS)
+// callback for loading/saving settings to the file system (LittleFS)
 bool FSCallback(MYESP_FSACTION action, JsonObject json) {
     bool ok = true;
     if (action == MYESP_FSACTION_LOAD) {
@@ -133,12 +134,10 @@ bool FSCallback(MYESP_FSACTION action, JsonObject json) {
             ok                        = false;
         }
         */
-
     }
 
     if (action == MYESP_FSACTION_SAVE) {
-       // json["led"]             = EMSESP_Status.led_enabled;
-
+        // json["led"]             = EMSESP_Status.led_enabled;
     }
 
     return ok; // all ok
@@ -179,7 +178,7 @@ void TelnetCommandCallback(uint8_t wc, const char * commandLine) {
         showInfo();
         ok = true;
     }
-    
+
     // check for invalid command
     if (!ok) {
         myDebug("Unknown command. Use ? for help.");
@@ -190,20 +189,28 @@ void TelnetCommandCallback(uint8_t wc, const char * commandLine) {
  * Setup
  */
 void setup() {
-
     // set up myESP for Wifi, MQTT, MDNS and Telnet
     myESP.setTelnet(project_cmds, ArraySize(project_cmds), TelnetCommandCallback, TelnetCallback); // set up Telnet commands
 #ifdef WIFI_SSID
     myESP.setWIFI(WIFI_SSID, WIFI_PASSWORD, WIFICallback);
 #else
-    myESP.setWIFI(NULL, NULL, WIFICallback); // pull the wifi settings from the SPIFFS stored settings
+    myESP.setWIFI(NULL, NULL, WIFICallback); // pull the wifi settings from the LittleFS stored settings
 #endif
 
-    // MQTT host, username and password taken from the SPIFFS settings
-    myESP.setMQTT(NULL, NULL, NULL, MQTT_BASE, MQTT_KEEPALIVE, MQTT_QOS, MQTT_RETAIN, MQTT_WILL_TOPIC, 
-      MQTT_WILL_ONLINE_PAYLOAD, MQTT_WILL_OFFLINE_PAYLOAD, MQTTCallback);
+    // MQTT host, username and password taken from the LittleFS settings
+    myESP.setMQTT(NULL,
+                  NULL,
+                  NULL,
+                  MQTT_BASE,
+                  MQTT_KEEPALIVE,
+                  MQTT_QOS,
+                  MQTT_RETAIN,
+                  MQTT_WILL_TOPIC,
+                  MQTT_WILL_ONLINE_PAYLOAD,
+                  MQTT_WILL_OFFLINE_PAYLOAD,
+                  MQTTCallback);
 
-    // custom settings in SPIFFS
+    // custom settings in LittleFS
     myESP.setSettings(FSCallback, SettingsCallback);
 
     // start up all the services
@@ -218,11 +225,9 @@ void setup() {
     // LED
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
-
 }
 
 void loop() {
-
     myESP.loop();
 
     // check button press

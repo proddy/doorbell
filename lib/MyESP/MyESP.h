@@ -9,7 +9,7 @@
 #ifndef MyEMS_h
 #define MyEMS_h
 
-#define MYESP_VERSION "1.1.16"
+#define MYESP_VERSION "1.1.17"
 
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
@@ -21,7 +21,7 @@
 
 #if defined(ARDUINO_ARCH_ESP32)
 //#include <ESPmDNS.h>
-#include <SPIFFS.h>             // added for ESP32
+#include <LittleFS.h>           // added for ESP32
 #define ets_vsnprintf vsnprintf // added for ESP32
 #define OTA_PORT 3232
 #else
@@ -85,15 +85,18 @@ PROGMEM const char         custom_reset_hardware[] = "Hardware button";
 PROGMEM const char         custom_reset_terminal[] = "Reboot from terminal";
 PROGMEM const char         custom_reset_mqtt[]     = "Reboot from MQTT";
 PROGMEM const char         custom_reset_ota[]      = "Reboot after successful OTA update";
-PROGMEM const char * const custom_reset_string[]   = {custom_reset_hardware, custom_reset_terminal, custom_reset_mqtt, custom_reset_ota};
+PROGMEM const char * const custom_reset_string[]   = {custom_reset_hardware,
+                                                      custom_reset_terminal,
+                                                      custom_reset_mqtt,
+                                                      custom_reset_ota};
 #define CUSTOM_RESET_HARDWARE 1 // Reset from hardware button
 #define CUSTOM_RESET_TERMINAL 2 // Reset from terminal
 #define CUSTOM_RESET_MQTT 3     // Reset via MQTT
 #define CUSTOM_RESET_OTA 4      // Reset after successful OTA update
 #define CUSTOM_RESET_MAX 4
 
-// SPIFFS
-#define SPIFFS_MAXSIZE 800 // https://arduinojson.org/v6/assistant/
+// LittleFS
+#define LittleFS_MAXSIZE 800 // https://arduinojson.org/v6/assistant/
 
 #define SYSTEM_CHECK_TIME 60000   // The system is considered stable after these many millis (1 minute)
 #define SYSTEM_CHECK_MAX 5        // After this many crashes on boot

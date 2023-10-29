@@ -344,10 +344,12 @@ void MyESP::_mqtt_setup() {
 
     //mqttClient.onPublish([this](uint16_t packetId) { myDebug_P(PSTR("[MQTT] Publish ACK for PID %d"), packetId); });
 
-    mqttClient.onMessage(
-        [this](char * topic, char * payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
-            _mqttOnMessage(topic, payload, len);
-        });
+    mqttClient.onMessage([this](char *                           topic,
+                                char *                           payload,
+                                AsyncMqttClientMessageProperties properties,
+                                size_t                           len,
+                                size_t                           index,
+                                size_t                           total) { _mqttOnMessage(topic, payload, len); });
 }
 
 // WiFI setup
@@ -357,7 +359,7 @@ void MyESP::_wifi_setup() {
     jw.enableAP(false);
     jw.setConnectTimeout(WIFI_CONNECT_TIMEOUT);
     jw.setReconnectTimeout(WIFI_RECONNECT_INTERVAL);
-    jw.enableAPFallback(true);                 // AP mode only as fallback
+    jw.enableAPFallback(false);                // AP mode only as fallback
     jw.enableSTA(true);                        // Enable STA mode (connecting to a router)
     jw.enableScan(false);                      // Configure it to scan available networks and connect in order of dBm
     jw.cleanNetworks();                        // Clean existing network configuration
@@ -499,8 +501,9 @@ void MyESP::_consoleShowHelp() {
             if (!_helpProjectCmds[i].set) {
                 SerialAndTelnet.print(FPSTR("*  "));
                 SerialAndTelnet.print(FPSTR(_helpProjectCmds[i].key));
-                for (uint8_t j = 0; j < ((max_len + 5) - strlen(_helpProjectCmds[i].key)); j++) { // account for longest string length
-                    SerialAndTelnet.print(FPSTR(" "));                                            // padding
+                for (uint8_t j = 0; j < ((max_len + 5) - strlen(_helpProjectCmds[i].key));
+                     j++) {                            // account for longest string length
+                    SerialAndTelnet.print(FPSTR(" ")); // padding
                 }
                 SerialAndTelnet.println(FPSTR(_helpProjectCmds[i].description));
             }
@@ -533,8 +536,9 @@ void MyESP::_printSetCommands() {
             if (_helpProjectCmds[i].set) {
                 SerialAndTelnet.print(FPSTR("*  set "));
                 SerialAndTelnet.print(FPSTR(_helpProjectCmds[i].key));
-                for (uint8_t j = 0; j < ((max_len + 5) - strlen(_helpProjectCmds[i].key)); j++) { // account for longest string length
-                    SerialAndTelnet.print(FPSTR(" "));                                            // padding
+                for (uint8_t j = 0; j < ((max_len + 5) - strlen(_helpProjectCmds[i].key));
+                     j++) {                            // account for longest string length
+                    SerialAndTelnet.print(FPSTR(" ")); // padding
                 }
                 SerialAndTelnet.println(FPSTR(_helpProjectCmds[i].description));
             }
@@ -894,7 +898,11 @@ void MyESP::showSystemStats() {
 #endif
     myDebug_P(PSTR(" [FLASH] Flash speed: %u Hz"), ESP.getFlashChipSpeed());
     myDebug_P(PSTR(" [FLASH] Flash mode: %s"),
-              mode == FM_QIO ? "QIO" : mode == FM_QOUT ? "QOUT" : mode == FM_DIO ? "DIO" : mode == FM_DOUT ? "DOUT" : "UNKNOWN");
+              mode == FM_QIO    ? "QIO"
+              : mode == FM_QOUT ? "QOUT"
+              : mode == FM_DIO  ? "DIO"
+              : mode == FM_DOUT ? "DOUT"
+                                : "UNKNOWN");
 #if defined(ESP8266)
     myDebug_P(PSTR(" [FLASH] Flash size (CHIP): %d"), ESP.getFlashChipRealSize());
 #endif
@@ -1177,7 +1185,7 @@ char * MyESP::_mqttTopic(const char * topic) {
 void MyESP::_fs_printConfig() {
     myDebug_P(PSTR("[FS] Contents:"));
 
-    File configFile = SPIFFS.open(MYEMS_CONFIG_FILE, "r");
+    File configFile = LittleFS.open(MYEMS_CONFIG_FILE, "r");
     if (!configFile) {
         myDebug_P(PSTR("[FS] Failed to read file for printing"));
         return;
@@ -1196,7 +1204,7 @@ void MyESP::_fs_eraseConfig() {
     myDebug_P(PSTR("[FS] Erasing settings, please wait a few seconds. ESP will "
                    "automatically restart when finished."));
 
-    if (SPIFFS.format()) {
+    if (LittleFS.format()) {
         delay(1000); // wait 1 second
         resetESP();
     }
@@ -1207,9 +1215,9 @@ void MyESP::setSettings(fs_callback_f callback_fs, fs_settings_callback_f callba
     _fs_settings_callback = callback_settings_fs;
 }
 
-// load from spiffs
+// load from LittleFS
 bool MyESP::_fs_loadConfig() {
-    File configFile = SPIFFS.open(MYEMS_CONFIG_FILE, "r");
+    File configFile = LittleFS.open(MYEMS_CONFIG_FILE, "r");
 
     size_t size = configFile.size();
     if (size > 1024) {
@@ -1222,8 +1230,8 @@ bool MyESP::_fs_loadConfig() {
         return false;
     }
 
-    StaticJsonDocument<SPIFFS_MAXSIZE> doc;
-    JsonObject                         json = doc.to<JsonObject>();
+    StaticJsonDocument<LittleFS_MAXSIZE> doc;
+    JsonObject                           json = doc.to<JsonObject>();
 
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, configFile);
@@ -1263,17 +1271,17 @@ bool MyESP::_fs_loadConfig() {
     return ok;
 }
 
-// save settings to spiffs
+// save settings to LittleFS
 bool MyESP::fs_saveConfig() {
     bool ok = true;
 
-    // call any custom functions before handling SPIFFS
+    // call any custom functions before handling LittleFS
     if (_ota_pre_callback) {
         (_ota_pre_callback)();
     }
 
-    StaticJsonDocument<SPIFFS_MAXSIZE> doc;
-    JsonObject                         json = doc.to<JsonObject>();
+    StaticJsonDocument<LittleFS_MAXSIZE> doc;
+    JsonObject                           json = doc.to<JsonObject>();
 
     json["app_version"]   = _app_version;
     json["wifi_ssid"]     = _wifi_ssid;
@@ -1288,12 +1296,12 @@ bool MyESP::fs_saveConfig() {
     (void)(_fs_callback)(MYESP_FSACTION_SAVE, json);
 
     // if file exists, remove it just to be safe
-    if (SPIFFS.exists(MYEMS_CONFIG_FILE)) {
-        SPIFFS.remove(MYEMS_CONFIG_FILE);
+    if (LittleFS.exists(MYEMS_CONFIG_FILE)) {
+        LittleFS.remove(MYEMS_CONFIG_FILE);
     }
 
     // open for writing
-    File configFile = SPIFFS.open(MYEMS_CONFIG_FILE, "w");
+    File configFile = LittleFS.open(MYEMS_CONFIG_FILE, "w");
     if (!configFile) {
         myDebug_P(PSTR("[FS] Failed to open config file for writing"));
         return false;
@@ -1308,7 +1316,7 @@ bool MyESP::fs_saveConfig() {
 
     configFile.close();
 
-    // call any custom functions before handling SPIFFS
+    // call any custom functions before handling LittleFS
     if (_ota_post_callback) {
         (_ota_post_callback)();
     }
@@ -1319,7 +1327,7 @@ bool MyESP::fs_saveConfig() {
 // init the SPIFF file system and load the config
 // if it doesn't exist try and create it
 void MyESP::_fs_setup() {
-    if (!SPIFFS.begin()) {
+    if (!LittleFS.begin()) {
         myDebug_P(PSTR("[FS] Failed to mount the file system. Erasing..."));
         _fs_eraseConfig(); // fix for ESP32
         return;
@@ -1407,7 +1415,7 @@ void MyESP::begin(const char * app_hostname, const char * app_name, const char *
     getInitialFreeHeap(); // get initial free mem
 
     _telnet_setup(); // Telnet setup, called first to set Serial
-    _fs_setup();     // SPIFFS setup, do this first to get values
+    _fs_setup();     // LittleFS setup, do this first to get values
     _wifi_setup();   // WIFI setup
     _ota_setup();    // init OTA
 
